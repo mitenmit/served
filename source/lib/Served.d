@@ -47,7 +47,7 @@ class Served{
 		return new Object();
 	}
 	
-	public void listen(int port = 80){
+	public void listen(ushort port = 80){
 		auto server = new CHTTPServer();
 		server.listen(port);
 	}

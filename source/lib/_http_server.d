@@ -1,5 +1,6 @@
 import std.stdio;
 import std.socket;
+import std.conv;
 
 string CRLF = "\r\n";
 
@@ -9,7 +10,7 @@ class CHTTPServer{
 	this(){
 	}
 	
-	void openConnection(){
+	void openConnection(ushort port){
 		_socket = new TcpSocket(AddressFamily.INET);
 		_socket.bind(new InternetAddress("0.0.0.0", port));
 		_socket.listen(8);
@@ -21,7 +22,7 @@ class CHTTPServer{
 		_socket.close();
 	}
 	
-	void listen(int port = 80){
+	void listen(ushort port = 80){
 		writeln("Listening on port ", port, "...");
 		
 	}
