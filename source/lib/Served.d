@@ -1,7 +1,10 @@
 import std.stdio;
 
+import _http_server;
+
 public import CRouter;
 public import CEvent;
+
 
 class Served{
 	private CRouter _router;
@@ -45,7 +48,8 @@ class Served{
 	}
 	
 	public void listen(int port = 80){
-		writeln("Listening on port ", port, "...");
+		auto server = new CHTTPServer();
+		server.listen(port);
 	}
 	
 }
