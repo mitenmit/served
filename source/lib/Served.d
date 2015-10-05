@@ -1,6 +1,7 @@
 import std.stdio;
 
 public import CRouter;
+public import CEvent;
 
 class Served{
 	private CRouter _router;
@@ -31,6 +32,8 @@ class Served{
 	
 	
 	public Served use(){
+		int offset = 0;
+		string path = "/";
 		
 		return this;
 	}
@@ -39,6 +42,10 @@ class Served{
 		this.lazyRouter();
 		
 		return new Object();
+	}
+	
+	public void listen(int port = 80){
+		writeln("Listening on port ", port, "...");
 	}
 	
 }
