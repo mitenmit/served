@@ -2,6 +2,7 @@ import std.stdio;
 import std.socket;
 import std.conv;
 import std.string;
+import std.file;
 
 string CRLF = "\r\n";
 
@@ -29,8 +30,30 @@ class CHTTPServer{
 								"Content-Type: text/html; charset=utf-8"~CRLF~
 								"Content-Length: "~to!(string)(html.length)~CRLF~
 								"Connection: keep-alive"~CRLF~
+								"Server: served"~CRLF~
 								CRLF~html;
 		return responseHeader;						
+	}
+	
+	private void parseRequestAndRespond(string request, Socket currSock){
+		string[] lines = request.split(CRLF);
+		
+		if(request[0..3]=="GET"){
+			string resource = lines[0].split(" ")[1];
+			string contents="";
+			string filename = (resource[resource.length-1] == '/' ? resource~"index" : resource)~".html";
+			
+			
+			if(exists("public"~filename)!=0){
+				contents = cast(immutable char[])read("public"~filename);
+			}else{
+				contents = "Resource not found";
+			}
+			
+			writeln(filename);
+			currSock.send( makeHTMLResponse(contents) );
+			//currSock.send( makeHTMLResponse("<html><head><title>Test</title></head><body>Hello</body></html>") );
+		}
 	}
 	
 	void handleHTTP(){
@@ -43,20 +66,11 @@ class CHTTPServer{
 			
 			while ((bytesRead = currSock.receive(buff)) > 0){
 				string request = cast(string)buff[0..bytesRead];
-				if(request[0..3]=="GET"){
-					string[] lines = request.split(CRLF);
-					writeln(lines[0]);
-					/*
-					foreach(l; lines){
-						writeln(l);
-					}
-					*/
-					currSock.send( makeHTMLResponse("<html><head><title>Test</title></head><body>Helo</body></html>") );
-				}
+				parseRequestAndRespond(request, currSock);
 			}	
 				
 			currSock.close();
-			buff.clear();
+			buff.destroy();
 		}
 	}
 	
