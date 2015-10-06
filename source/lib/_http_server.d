@@ -1,9 +1,11 @@
 import std.stdio;
 import std.socket;
+import std.algorithm;
 import std.conv;
 import std.string;
 import std.file;
 import std.array;
+import std.regex;
 
 string CRLF = "\r\n";
 
@@ -27,14 +29,14 @@ class CHTTPServer{
 		_socket.close();
 	}
 	
-	string makeHTMLResponse(string html){
+	string makeResponse(string src, string type){
 		string responseHeader = 
 								"HTTP/1.1 200 OK"~CRLF~
-								"Content-Type: text/html; charset=utf-8"~CRLF~
-								"Content-Length: "~to!(string)(html.length)~CRLF~
+								"Content-Type: "~type~"; charset=utf-8"~CRLF~
+								"Content-Length: "~to!(string)(src.length)~CRLF~
 								"Connection: keep-alive"~CRLF~
 								"Server: served"~CRLF~
-								CRLF~html;
+								CRLF~src;
 		return responseHeader;						
 	}
 	
@@ -44,7 +46,38 @@ class CHTTPServer{
 		if(request[0..3]=="GET"){
 			string resource = lines[0].split(" ")[1];
 			string contents="";
-			string filename = (resource[resource.length-1] == '/' ? resource~"index" : resource)~".html";
+			string filename = resource;
+			string type="text/html";
+			
+			string ext = "";
+			string params = "";
+			bool extMode = false;
+			bool paramsMode = false;
+			
+			//auto ctr = ctRegex!(`^(\/\/?(?!\/)[^\?#\s]*)(\?[^#\s]*)?$`);
+			//auto parsed = matchAll(resource, ctr);
+			//writeln(request);
+			
+			for(int i=0;i<resource.length;i++){
+			
+				if(resource[i]=='?'){
+					extMode = false;
+					paramsMode = true;
+				}
+				
+				if(resource[i]=='.') extMode = true;
+				
+				if(extMode)	ext ~= resource[i];
+				if(paramsMode && resource[i]!='?') params ~= resource[i];
+			}
+			
+			if( ext.length > 0 ){
+				if(ext==".png") type="image/png";
+				if(ext==".jpg") type="image/jpeg";
+				if(ext==".jpeg") type="image/jpeg";
+			}else{
+				filename = (resource[resource.length-1] == '/' ? resource~"index" : resource)~".html";
+			}
 			
 			
 			if(exists("public"~filename)!=0){
@@ -53,9 +86,8 @@ class CHTTPServer{
 				contents = "Resource not found";
 			}
 			
-			writeln(filename);
-			currSock.send( makeHTMLResponse(contents) );
-			//currSock.send( makeHTMLResponse("<html><head><title>Test</title></head><body>Hello</body></html>") );
+			writeln("Serving ", filename);
+			currSock.send( makeResponse(contents, type) );
 		}
 	}
 	
