@@ -6,6 +6,7 @@ import std.string;
 import std.file;
 import std.array;
 import std.regex;
+import std.json;
 
 string CRLF = "\r\n";
 
@@ -57,6 +58,11 @@ class CHTTPServer{
 			//auto ctr = ctRegex!(`^(\/\/?(?!\/)[^\?#\s]*)(\?[^#\s]*)?$`);
 			//auto parsed = matchAll(resource, ctr);
 			//writeln(request);
+			
+			//auto ctr = ctRegex!(`\<\?json*|\?\>*`);
+			//auto parsed = split(st, ctr);
+			//JSONValue j = parseJSON(parsed[1]);
+			//writeln( "include" in j.object ? "Index" : "No index" );
 			
 			for(int i=0;i<resource.length;i++){
 			
