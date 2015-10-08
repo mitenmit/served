@@ -1,11 +1,22 @@
+<!--
 <html>
 <head>
 	<title>Index</title>
 </head>
 <body>
-	<h1>This is info index</h1>
-	<div>This page contains:</div>
-	<div><a href="/info/info">index page</a></div>
-	<div>You can go back <a href="/">home</a></div>
+-->
+<?json {"include": "/theme/header.html"} ?>
+	<div class="content wrap">
+		<h1>This is info index</h1>
+		
+		<?json {"include": "/info/part.html"} ?>
+		
+		<div>This page contains:</div>
+		<div><a href="/info/info">index page</a></div><br />
+		<div>You can go back <a href="/">home</a></div>
+	</div>	
+<?json {"include": "/theme/footer.html"} ?>	
+<!--	
 </body>
 </head>
+-->

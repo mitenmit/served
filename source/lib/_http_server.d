@@ -30,6 +30,38 @@ class CHTTPServer{
 		_socket.close();
 	}
 	
+	string handleJson(string contents){
+		string result = "";
+		string part;
+		auto ctr = ctRegex!(`\<\?json*|\?\>*`);
+		auto parsed = split(contents, ctr);
+		
+		if(parsed.length > 1){
+			int len = (parsed.length+1) / 2;
+			for(int i = 0; i<len; i++ ){
+				if(i<len-1){
+					JSONValue j = parseJSON(parsed[i*2+1]);
+					
+					if("include" in j.object){
+						if(exists("public"~j["include"].str)!=0){
+							part = cast(immutable char[])read("public"~j["include"].str);
+						}else{
+							part = "File not found";
+						}
+						
+						result ~= parsed[i*2]~part;
+					}
+				}else{
+					result ~= parsed[i*2];
+				}	
+			}
+		}else{
+			result = contents;
+		}
+			
+		return result;
+	}
+	
 	string makeResponse(string src, string type){
 		string responseHeader = 
 								"HTTP/1.1 200 OK"~CRLF~
@@ -58,11 +90,6 @@ class CHTTPServer{
 			//auto ctr = ctRegex!(`^(\/\/?(?!\/)[^\?#\s]*)(\?[^#\s]*)?$`);
 			//auto parsed = matchAll(resource, ctr);
 			//writeln(request);
-			
-			//auto ctr = ctRegex!(`\<\?json*|\?\>*`);
-			//auto parsed = split(st, ctr);
-			//JSONValue j = parseJSON(parsed[1]);
-			//writeln( "include" in j.object ? "Index" : "No index" );
 			
 			for(int i=0;i<resource.length;i++){
 			
@@ -93,7 +120,7 @@ class CHTTPServer{
 			}
 			
 			writeln("Serving ", filename);
-			currSock.send( makeResponse(contents, type) );
+			currSock.send( makeResponse(/*contents*/ handleJson(contents), type) );
 		}
 	}
 	
