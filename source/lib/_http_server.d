@@ -73,6 +73,11 @@ class CHTTPServer{
 		return responseHeader;						
 	}
 	
+	void extractLinks(string html){
+		auto ctr = ctRegex!(`\<a\s*[\w*=['|"].*['|']]*\s*`);
+		writeln(matchAll(html, ctr));
+	}
+	
 	private void parseRequestAndRespond(string request, Socket currSock){
 		string[] lines = request.split(CRLF);
 		
@@ -118,6 +123,9 @@ class CHTTPServer{
 			}else{
 				contents = "Resource not found";
 			}
+			
+			writeln("Links:");
+			extractLinks(contents);
 			
 			writeln("Serving ", filename);
 			currSock.send( makeResponse(/*contents*/ handleJson(contents), type) );
