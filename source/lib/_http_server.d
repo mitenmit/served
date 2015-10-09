@@ -74,8 +74,11 @@ class CHTTPServer{
 	}
 	
 	void extractLinks(string html){
-		auto ctr = ctRegex!(`\<a\s*[\w*=['|"].*['|']]*\s*`);
-		writeln(matchAll(html, ctr));
+		auto ctr = ctRegex!(`\<a(.*)?href=['|"](.*)['|"]`);
+		
+		foreach(m; matchAll(html, ctr)){
+			writeln("Location: ", m[2]);
+		}
 	}
 	
 	private void parseRequestAndRespond(string request, Socket currSock){
