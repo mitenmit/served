@@ -8,14 +8,66 @@ import std.array;
 import std.regex;
 import std.json;
 
+import Served;
+
 string CRLF = "\r\n";
+
+class  CHTTPRequest{
+	public string method;
+	public string url;
+	
+	private string _rawRequest;
+	private string[] _lines;
+	this(){
+		
+	}
+	
+	this(string requestString){
+		if(requestString.length>3){
+			this._rawRequest = requestString;
+			this._lines = this._rawRequest.split(CRLF);
+			if(this._lines.length > 0){
+				string r[] = this._lines[0].split(" ");
+				if(r.length>2){
+					this.method = r[0];
+					this.url = r[1];
+				}
+			}
+			if(this._lines.length > 1){
+				foreach(l; this._lines[1..$]){
+					//writeln(l.split(" "));
+				}
+			}
+		}	
+	}
+	
+}
+
+class CHTTPResponse{
+	private Socket _socket;
+	
+	this(){
+		this(null);
+	}
+	
+	this(Socket socket){
+		if(socket) this._socket = socket;
+	}
+	
+	void send(const(void)[] buf){
+		if(this._socket) this._socket.send(buf);
+	}
+}
 
 class CHTTPServer{
 	private Socket _socket;
 	
 	private int _maxConnections = 60;
 	
-	this(){
+	private Served _served = null;
+	
+	this(Served served){
+		this._served = served;
 	}
 	
 	void openConnection(ushort port){
@@ -38,9 +90,18 @@ class CHTTPServer{
 		
 		if(parsed.length > 1){
 			int len = (parsed.length+1) / 2;
+			JSONValue[] jsonValues;
+			
+			for(int i = 0; i<(parsed.length-1) / 2; i++ ){
+				jsonValues ~= parseJSON(parsed[i*2+1]);
+			}
+			
+			//writeln(jsonValues);
+			
 			for(int i = 0; i<len; i++ ){
 				if(i<len-1){
-					JSONValue j = parseJSON(parsed[i*2+1]);
+					//JSONValue j = parseJSON(parsed[i*2+1]);
+					JSONValue j = jsonValues[i];
 					
 					if("include" in j.object){
 						if(exists("public"~j["include"].str)!=0){
@@ -49,7 +110,7 @@ class CHTTPServer{
 							part = "File not found";
 						}
 						
-						result ~= parsed[i*2]~part;
+						result ~= parsed[i*2]~handleJson(part);
 					}
 				}else{
 					result ~= parsed[i*2];
@@ -207,6 +268,11 @@ SOCK_DOWN:
 						string request = cast(string)buff[0..read-1];
 						parseRequestAndRespond(request, sockets[i]);
 						//sockets[i].send(buf[0 .. read]);
+						/*
+						if(this._served){
+							this._served.handle(new CHTTPRequest(request), new CHTTPResponse(sockets[i]) );
+						}
+						*/
 						writeln("");
 					}
 				}	

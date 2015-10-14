@@ -25,12 +25,12 @@ class Served{
 		}
 	}
 	
-	private void handle(){
+	public void handle(CHTTPRequest req, CHTTPResponse res){
 		if(!_router){
 			writeln("Router not set up!");
 			return;
 		}
-		//_router.handle();
+		//_router.handle(req, res);
 	}
 	
 	
@@ -41,14 +41,15 @@ class Served{
 		return this;
 	}
 	
-	public Object route(string path){
+	CRoute route(string path){
 		this.lazyRouter();
 		
-		return new Object();
+		return this._router.route(path);
+		//return new Object();
 	}
 	
 	public void listen(ushort port = 80){
-		auto server = new CHTTPServer();
+		auto server = new CHTTPServer(this);
 		server.listen(port);
 	}
 	
