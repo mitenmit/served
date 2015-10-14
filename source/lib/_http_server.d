@@ -88,6 +88,8 @@ class CHTTPServer{
 		auto ctr = ctRegex!(`\<\?json*|\?\>*`);
 		auto parsed = split(contents, ctr);
 		
+		auto vars = ctRegex!(`\{([^}]*)\}`);
+		
 		if(parsed.length > 1){
 			int len = (parsed.length+1) / 2;
 			JSONValue[] jsonValues;
@@ -119,7 +121,10 @@ class CHTTPServer{
 		}else{
 			result = contents;
 		}
-			
+		
+		auto splitVars = match(result, vars);
+		writeln(splitVars);
+		
 		return result;
 	}
 	
