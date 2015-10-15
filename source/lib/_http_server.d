@@ -27,7 +27,7 @@ class  CHTTPRequest{
 			this._rawRequest = requestString;
 			this._lines = this._rawRequest.split(CRLF);
 			if(this._lines.length > 0){
-				string r[] = this._lines[0].split(" ");
+				string[] r = this._lines[0].split(" ");
 				if(r.length>2){
 					this.method = r[0];
 					this.url = r[1];
@@ -82,13 +82,15 @@ class CHTTPServer{
 		_socket.close();
 	}
 	
+	string[string] jsonVars;
+	
 	string handleJson(string contents){
 		string result = "";
 		string part;
 		auto ctr = ctRegex!(`\<\?json*|\?\>*`);
 		auto parsed = split(contents, ctr);
 		
-		auto vars = ctRegex!(`\{([^}]*)\}`);
+		auto vars = ctRegex!(`\{\{([^}]*)\}\}`);
 		
 		if(parsed.length > 1){
 			int len = (parsed.length+1) / 2;
@@ -105,9 +107,27 @@ class CHTTPServer{
 					//JSONValue j = parseJSON(parsed[i*2+1]);
 					JSONValue j = jsonValues[i];
 					
+					foreach(key, value ; j.object){
+						if(key!="include" && "include" in j.object){
+							//writeln("Key: ", j["include"].str~":"~key);
+							jsonVars[j["include"].str~":"~key] = value.str;
+						}
+					}
+					
 					if("include" in j.object){
 						if(exists("public"~j["include"].str)!=0){
-							part = cast(immutable char[])read("public"~j["include"].str);
+							string partFileName = j["include"].str;
+							part = cast(immutable char[])read("public"~partFileName);
+							
+							auto splitVars = matchAll(part, vars);
+							foreach(v; splitVars){
+								if( (partFileName~":"~v[1]) in jsonVars){
+									part = part.replace("{{"~v[1]~"}}", jsonVars[partFileName~":"~v[1]]);
+								}else{
+									part = part.replace("{{"~v[1]~"}}", "");
+								}
+							}
+							
 						}else{
 							part = "File not found";
 						}
@@ -122,8 +142,14 @@ class CHTTPServer{
 			result = contents;
 		}
 		
-		auto splitVars = match(result, vars);
-		writeln(splitVars);
+		/*
+		auto splitVars = matchAll(result, vars);
+		foreach(v; splitVars){
+			result = result.replace("{{"~v[1]~"}}", "{"~filename~":"~v[1]~"}");
+			//result = replace(result, vars, "{"~filename~":"~v[1]~"}");
+			writeln(v[1]);
+		}
+		*/
 		
 		return result;
 	}
@@ -193,11 +219,12 @@ class CHTTPServer{
 				contents = "Resource not found";
 			}
 			
-			writeln("Links:");
-			extractLinks(contents);
+			//writeln("Links:");
+			//extractLinks(contents);
 			
 			writeln("Serving ", filename);
-			currSock.send( makeResponse(/*contents*/ handleJson(contents), type) );
+			currSock.send( makeResponse(/*contents*/ (ext=="" || ext==".html" || ext==".html") ? handleJson(contents) : contents, type) );
+			//writeln(jsonVars);
 		}
 	}
 	
@@ -278,7 +305,7 @@ SOCK_DOWN:
 							this._served.handle(new CHTTPRequest(request), new CHTTPResponse(sockets[i]) );
 						}
 						*/
-						writeln("");
+						//writeln("");
 					}
 				}	
 			}
